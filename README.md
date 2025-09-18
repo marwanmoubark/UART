@@ -27,24 +27,11 @@ This project was developed as part of the course requirements to design and impl
 - **Clock Frequency:** Configurable (tested with 100 MHz system clock).  
 - **Transmission:** LSB-first.  
 - **Modules:**  
-  - `uart_tx.v` → UART Transmitter  
-  - `uart_rx.v` → UART Receiver  
-  - `uart_top.v` → Integration module  
+  - `UART_TX.v` → UART Transmitter  
+  - `UART_RX.v` → UART Receiver  
+  - `UART_top.v` → Integration module  
 
 ---
-
-## 📂 Repository Structure  
-├── src/ # Verilog source files
-│ ├── UART_TX.v # Transmitter
-│ ├── UART_RX.v # Receiver
-│ └── uart_top.v # Top-level module
-│
-├── tb/ # Testbenches
-│ └── uart_tb.v # UART simulation testbench
-│
-├── docs/ # Documentation & diagrams
-│
-└── README.md # Project report
 
 
 ---
