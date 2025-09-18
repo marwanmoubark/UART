@@ -35,8 +35,8 @@ This project was developed as part of the course requirements to design and impl
 
 ## 📂 Repository Structure  
 ├── src/ # Verilog source files
-│ ├── uart_tx.v # Transmitter
-│ ├── uart_rx.v # Receiver
+│ ├── UART_TX.v # Transmitter
+│ ├── UART_RX.v # Receiver
 │ └── uart_top.v # Top-level module
 │
 ├── tb/ # Testbenches
