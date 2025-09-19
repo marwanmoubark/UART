@@ -81,18 +81,17 @@ module UART_System_TB();
         #(10*CLK_PERIOD);
         reset_n = 1;
 
-        // push all words into Device A TX FIFO
+        // fill Device A TX FIFO
         for (i = 0; i < NUM_WORDS; i = i+1) begin
             @(negedge clk);
             cpu_data_in_a = data_mem[i];
             cpu_wr_a = 1;
             @(negedge clk);
             cpu_wr_a = 0;
-            // wait some time before next write (UART frame length)
+            
             #(15000*CLK_PERIOD);
         end
 
-        // Wait until DUT A finishes transmitting
         wait (TX_empty_A);
 
         // Read back all words from Device B RX FIFO
@@ -106,7 +105,6 @@ module UART_System_TB();
         end
 
         // Compare sent vs received
-        // Compare sent vs received word by word
         for (i = 0; i < NUM_WORDS; i = i+1) begin
             if (data_mem[i] === rx_mem[i]) begin
                 $display("PASS : data_in_a[%0d] = 0x%0h , data_out_b[%0d] = 0x%0h",
@@ -122,3 +120,4 @@ module UART_System_TB();
     end
 
 endmodule
+
