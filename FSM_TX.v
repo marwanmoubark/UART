@@ -8,14 +8,13 @@ module FSM_tx (
 
 );
 
+    //GRAY encode
+    localparam IDLE  = 3'b000;
+    localparam START = 3'b001;
+    localparam DATA  = 3'b011;
+    localparam STOP  = 3'b010;
 
-    localparam IDLE  = 2'd0;
-    localparam START = 2'd1;
-    localparam DATA  = 2'd2;
-    localparam STOP  = 2'd3;
-
-    // Registers
-    reg [1:0] C_state, N_state;
+    reg [2:0] C_state, N_state;
     reg [7:0] shift_reg;
     reg [2:0] bit_count;
 
@@ -77,15 +76,15 @@ module FSM_tx (
                    tx_busy <= 1'b1;
                     N_state   <= IDLE;
                 end
+                default : N_state <= IDLE; 
             endcase
         end
     end
 
     always @(*) begin
-        //tx_data <= 1'b1 ;
         if (tx_start == 1) begin
-            N_state <= START;
-            tx_busy <= 1'b1;
+            N_state = START;
+            tx_busy = 1'b1;
         end
     end
 
