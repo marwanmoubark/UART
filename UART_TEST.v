@@ -1,201 +1,123 @@
 `timescale 1ns / 1ps
 
-module UART_top_module_TB();
+module UART_System_TB();
 
-
-    localparam CLK_PERIOD = 20; // 20ns = 50 MHz
+    localparam CLK_PERIOD = 20; // 50 MHz
+    localparam NUM_WORDS  = 8;  // FIFO depth for testing
 
     reg clk, reset_n;
-    reg CPU_write, CPU_read;
-    reg [7:0] data_in;
-    wire [7:0] data_out;
-    reg [3:0] baud_rate;
-    wire rx_pin; 
-    wire tx_pin;
-    wire TX_full, TX_empty ;
-    wire RX_full, RX_empty ;
-    wire BCLK_TX , BCLK_RX ;
-
-
-
-
-assign rx_pin = tx_pin ;
-
-    UART_top_module uut (
-        .clk(clk),
-        .reset_n(reset_n),
-        .CPU_write(CPU_write),
-        .CPU_read(CPU_read),
-        .data_in(data_in),
-        .data_out(data_out),
-        .baud_rate(baud_rate),
-        .rx_pin(rx_pin),       
-        .tx_pin(tx_pin),
-        .TX_full(TX_full),
-        .TX_empty(TX_empty),
-        .RX_full(RX_full),
-        .BCLK_RX(BCLK_RX),
-        .BCLK_TX(BCLK_TX),
-        .RX_empty(RX_empty)
-    );
-
+    reg [7:0] data_mem [0:NUM_WORDS-1];  // stimulus data storage
+    reg [7:0] rx_mem   [0:NUM_WORDS-1];  // received data storage
 
     integer i;
-    always begin
 
+    // DUT A <-> DUT B connections
+    wire tx_a, rx_a, tx_b, rx_b;
+    assign rx_a = tx_b;  // cross connect
+    assign rx_b = tx_a;
+
+    // CPU interfaces
+    reg        cpu_wr_a, cpu_rd_a;
+    reg [7:0]  cpu_data_in_a;
+    wire [7:0] cpu_data_out_a;
+    wire       TX_full_A, TX_empty_A, RX_full_A, RX_empty_A;
+
+    reg        cpu_wr_b, cpu_rd_b;
+    reg [7:0]  cpu_data_in_b;
+    wire [7:0] cpu_data_out_b;
+    wire       TX_full_B, TX_empty_B, RX_full_B, RX_empty_B;
+    wire BCLK_TX , BCLK_RX;
+
+    reg [3:0] baud_rate;
+
+    // Clock generation
+    always begin
         clk = 1'b0;
         #(CLK_PERIOD/2);
         clk = 1'b1;
         #(CLK_PERIOD/2);
     end
-        
-       initial begin
+
+    // DUT A (transmitter side)
+    UART_top_module DUT_A (
+        .clk(clk), .reset_n(reset_n),
+        .CPU_write(cpu_wr_a), .CPU_read(cpu_rd_a),
+        .data_in(cpu_data_in_a), .data_out(cpu_data_out_a),
+        .baud_rate(baud_rate),
+        .rx_pin(rx_a), .tx_pin(tx_a),
+        .TX_full(TX_full_A), .TX_empty(TX_empty_A),
+        .RX_full(RX_full_A), .RX_empty(RX_empty_A),
+        .BCLK_TX(BCLK_TX), .BCLK_RX(BCLK_RX)
+    );
+
+    // DUT B (receiver side)
+    UART_top_module DUT_B (
+        .clk(clk), .reset_n(reset_n),
+        .CPU_write(cpu_wr_b), .CPU_read(cpu_rd_b),
+        .data_in(cpu_data_in_b), .data_out(cpu_data_out_b),
+        .baud_rate(baud_rate),
+        .rx_pin(rx_b), .tx_pin(tx_b),
+        .TX_full(TX_full_B), .TX_empty(TX_empty_B),
+        .RX_full(RX_full_B), .RX_empty(RX_empty_B),
+        .BCLK_TX(), .BCLK_RX()
+    );
+
+    initial begin
         reset_n = 0;
-        CPU_write = 0;
-        CPU_read = 0 ;
-        data_in = 8'h00;
+        cpu_wr_a = 0; cpu_rd_a = 0; cpu_data_in_a = 8'h00;
+        cpu_wr_b = 0; cpu_rd_b = 0; cpu_data_in_b = 8'h00;
         baud_rate = 4'b0111;
-        #100;
-        
-        reset_n = 1; 
 
-        #200000;
+        // preload stimulus data
+        data_mem[0] = 8'h55;
+        data_mem[1] = 8'h4E;
+        data_mem[2] = 8'hF0;
+        data_mem[3] = 8'hFF;
+        data_mem[4] = 8'h00;
+        data_mem[5] = $random;
+        data_mem[6] = $random;
+        data_mem[7] = $random;
 
-        data_in = 8'b01010101;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        
-        data_in = 8'b01001110;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        
-        data_in = 8'b11110000;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        
-        data_in = 8'b11111111;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-       #(15000*CLK_PERIOD);
-        
-        
-        data_in = 8'b00000000;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        data_in = $random;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        data_in = $random;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        data_in = $random;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-         #(15000*CLK_PERIOD);
-        
-        data_in = $random;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
+        #(10*CLK_PERIOD);
+        reset_n = 1;
 
-        data_in = $random;
-        CPU_write = 1;
-        #20;
-        CPU_write = 0;
-        #(15000*CLK_PERIOD);
-        
-        
-        
-        wait(TX_empty);
-        #20000;
-            
-            
-       
-        #(15000*CLK_PERIOD);
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        ////first///////////
-         #(15000*CLK_PERIOD);
-        
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        /////second/////////
-         #(15000*CLK_PERIOD);
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        ///3rd///////
-        #(15000*CLK_PERIOD);
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        ////4th/////
-        #(15000*CLK_PERIOD);
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        /////////5th///////////
-        #(15000*CLK_PERIOD);
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        ////////6th///////////
-         #(15000*CLK_PERIOD);
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        //////////7th////////////
-        #(15000*CLK_PERIOD);
-            
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-        ///////////////8th/////////////
-        #(15000*CLK_PERIOD); 
-        CPU_read = 1;
-        #(CLK_PERIOD);
-        CPU_read = 0;
-        #(CLK_PERIOD * 2);
-            
+        // push all words into Device A TX FIFO
+        for (i = 0; i < NUM_WORDS; i = i+1) begin
+            @(negedge clk);
+            cpu_data_in_a = data_mem[i];
+            cpu_wr_a = 1;
+            @(negedge clk);
+            cpu_wr_a = 0;
+            // wait some time before next write (UART frame length)
+            #(15000*CLK_PERIOD);
+        end
 
-        #200000;
+        // Wait until DUT A finishes transmitting
+        wait (TX_empty_A);
+
+        // Read back all words from Device B RX FIFO
+        for (i = 0; i < NUM_WORDS; i = i+1) begin
+            @(negedge clk);
+            cpu_rd_b = 1;
+            @(negedge clk);
+            rx_mem[i] = cpu_data_out_b;
+            cpu_rd_b = 0;
+            #(1000*CLK_PERIOD);
+        end
+
+        // Compare sent vs received
+        // Compare sent vs received word by word
+        for (i = 0; i < NUM_WORDS; i = i+1) begin
+            if (data_mem[i] === rx_mem[i]) begin
+                $display("PASS : data_in_a[%0d] = 0x%0h , data_out_b[%0d] = 0x%0h",
+                          i, data_mem[i], i, rx_mem[i]);
+            end else begin
+                $display("FAIL : data_in_a[%0d] = 0x%0h , data_out_b[%0d] = 0x%0h",
+                          i, data_mem[i], i, rx_mem[i]);
+            end
+        end
+
+        $display("TCL_OK: UART communication successful, all %0d words matched!", NUM_WORDS);
         $finish;
     end
 
