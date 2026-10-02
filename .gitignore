@@ -1,0 +1,45 @@
+# ==========================================
+# QuestaSim / ModelSim Compiled Artifacts
+# ==========================================
+# Ignore work directories at any level
+**/work/
+work/
+/*.lib
+/*.mti
+
+# QuestaSim specific library & optimization files
+*.qdb
+*.qpg
+*.qtl
+*_lock
+
+# Simulation output, waveforms, logs
+*.wlf
+*.ucdb
+*.vstf
+covhtmlreport/
+*.cov
+transcript
+*.log
+*.mti_log
+vsim.log
+
+# Temporary / cache files
+_vmake*
+_info
+wlft*
+
+# Saved GUI configurations
+*.vsim
+*.mpf
+modelsim.ini
+
+# C/C++ DPI objects
+*.o
+*.so
+*.dll
+
+# OS/Editor junk
+.DS_Store
+Thumbs.db
+*.swp
